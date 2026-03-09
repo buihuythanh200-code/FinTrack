@@ -1,0 +1,24 @@
+.auth-layout {
+  width: 100%;
+  height: 100vh;
+}
+.hero {
+  background-color: #e2e8f0;
+  /* Đảm bảo nó phủ kín toàn màn hình */
+  position: relative;
+}
+.hero::after {
+  content: "";
+  display: block;
+  width: 100%;
+  max-width: 42rem;
+  padding: 4rem;
+  background-color: #ffffff;
+  border-radius: 1.6rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.05); /* Bóng đổ cực êm */
+  border: 0.1rem solid #e2e8f0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}

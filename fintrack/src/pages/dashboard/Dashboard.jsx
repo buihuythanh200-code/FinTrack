@@ -1,0 +1,258 @@
+import Header from "../../components/Header.jsx";
+import CashFlowChart from "../../components/CashFlowChart.jsx";
+import StatCard from "../../components/Cards/StatCard.jsx";
+import TransactionList from "../../components/Transactions/TransactionList.jsx";
+import HeroCard from "../../components/Cards/HeroCard.jsx";
+import { useState, useRef, useMemo, useEffect } from "react";
+
+const dummyData = {
+  week: [
+    { name: "Mon", income: 4000, expense: 2400 },
+    { name: "Tue", income: 3000, expense: 1398 },
+    { name: "Wed", income: 2000, expense: 9800 },
+    { name: "Thu", income: 2780, expense: 3908 },
+    { name: "Fri", income: 1890, expense: 4800 },
+    { name: "Sat", income: 2390, expense: 3800 },
+    { name: "Sun", income: 3490, expense: 4300 },
+  ],
+  month: [
+    { name: "Week 1", income: 15000, expense: 12000 },
+    { name: "Week 2", income: 18000, expense: 10000 },
+    { name: "Week 3", income: 12000, expense: 14000 },
+    { name: "Week 4", income: 22000, expense: 16000 },
+  ],
+  year: [
+    { name: "Jan", income: 65000, expense: 50000 },
+    { name: "Feb", income: 70000, expense: 55000 },
+    { name: "Mar", income: 60000, expense: 62000 },
+    { name: "Apr", income: 85000, expense: 48000 },
+  ],
+};
+
+function Dashboard() {
+  const [timeFilter, setTimeFilter] = useState("week");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const dateRef = useRef(null);
+  const calendarRef = useRef(null);
+  const chartData = dummyData[timeFilter];
+
+  // --- Logic Helpers (Giữ nguyên của bạn) ---
+  const getStartOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d;
+  };
+  const getEndOfWeek = (date) => {
+    const start = getStartOfWeek(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return end;
+  };
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+  const { startYear, endYear } = useMemo(() => {
+    const start = selectedYear - (selectedYear % 10);
+    return { startYear: start, endYear: start + 9 };
+  }, [selectedYear]);
+
+  const years = Array.from({ length: 10 }, (_, i) => startYear + i);
+  const today = useMemo(() => new Date(), []);
+
+  const getTimeLabel = () => {
+    if (timeFilter === "week") {
+      const start = getStartOfWeek(today);
+      const end = getEndOfWeek(today);
+      if (selectedDate >= start && selectedDate <= end) return "This Week";
+      return `${formatDate(getStartOfWeek(selectedDate))} - ${formatDate(getEndOfWeek(selectedDate))}`;
+    }
+    if (timeFilter === "month") {
+      const [year, month] = selectedMonth.split("-");
+      if (
+        Number(year) === today.getFullYear() &&
+        Number(month) === today.getMonth() + 1
+      )
+        return "This Month";
+      return `${month} / ${year}`;
+    }
+    if (timeFilter === "year") {
+      if (selectedYear === today.getFullYear()) return "This Year";
+      return selectedYear;
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target))
+        setShowCalendar(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-[1rem]">
+        {/* 1. Hero Card */}
+        <HeroCard
+          title="Total Balance"
+          amount="$24,562.00"
+          trend="+2.5%"
+          iconColor="text-[#009360]"
+        />
+
+        {/* 2 & 3. Stats Cards */}
+        <StatCard
+          title="Monthly Income"
+          amount="$4,200.00"
+          trend="+12%"
+          icon="fa-solid fa-arrow-down"
+          trendColor="bg-[#009360]/10 text-[#009360]"
+          iconBg="bg-[#009360]/10"
+          iconColor="text-[#009360]"
+        />
+        <StatCard
+          title="Monthly Expense"
+          amount="$1,850.00"
+          trend="-5%"
+          icon="fa-solid fa-arrow-up"
+          trendColor="bg-red-50 text-red-600"
+          iconBg="bg-red-50"
+          iconColor="text-red-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Cash Flow Section */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+          <div className="flex justify-between items-center mb-2 relative">
+            <h3 className="text-xl font-semibold text-gray-800 tracking-wide">
+              Cash Flow
+            </h3>
+            <div
+              className="font-semibold text-gray-700 w-[25rem] p-[1rem] bg-[#F1F3F5] text-center border border-white rounded-[1rem] hover:border-[#009360] cursor-pointer transition-all duration-[400ms] ease-in-out"
+              onClick={() => setShowCalendar(!showCalendar)}
+            >
+              {getTimeLabel()}
+            </div>
+
+            {showCalendar && (
+              <div
+                className="absolute right-0 top-[110%] w-[30rem] bg-white border border-gray-200 shadow-lg rounded-xl z-20 p-4 transition-all duration-300"
+                ref={calendarRef}
+              >
+                <div className="h-[100%] flex justify-center gap-6 items-center">
+                  {["week", "month", "year"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setTimeFilter(type)}
+                      className={`text-sm font-semibold capitalize cursor-pointer px-5 py-2 flex items-center justify-center rounded-lg transition-all duration-300 ${
+                        timeFilter === type
+                          ? "bg-[#009360] text-white shadow"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-4">
+                  {timeFilter === "week" && (
+                    <div className="relative w-full">
+                      <input
+                        ref={dateRef}
+                        type="date"
+                        className="absolute opacity-0 pointer-events-none bottom-[0]"
+                        value={selectedDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setSelectedDate(new Date(e.target.value))
+                        }
+                      />
+                      <input
+                        readOnly
+                        className="border border-gray-200 rounded-lg px-3 py-2 w-full cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-[#009360]"
+                        value={`${formatDate(getStartOfWeek(selectedDate))} - ${formatDate(getEndOfWeek(selectedDate))}`}
+                        onClick={() => dateRef.current.showPicker()}
+                      />
+                    </div>
+                  )}
+                  {timeFilter === "month" && (
+                    <input
+                      type="month"
+                      className="border border-gray-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-[#009360]"
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                    />
+                  )}
+                  {timeFilter === "year" && (
+                    <div className="border border-gray-200 rounded-xl p-4 w-[100%] bg-white shadow-sm">
+                      <div className="flex justify-between items-center font-semibold mb-3 text-gray-700">
+                        <div
+                          className="cursor-pointer hover:text-[#009360]"
+                          onClick={() => setSelectedYear((prev) => prev - 10)}
+                        >
+                          <i className="fa-solid fa-chevron-left"></i>
+                        </div>
+                        {startYear} - {endYear}
+                        <div
+                          className="cursor-pointer hover:text-[#009360]"
+                          onClick={() => setSelectedYear((prev) => prev + 10)}
+                        >
+                          <i className="fa-solid fa-chevron-right"></i>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-5 gap-2">
+                        {years.map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => setSelectedYear(year)}
+                            className={`py-1 rounded cursor-pointer ${selectedYear === year ? "bg-blue-500 text-white" : "bg-gray-100"}`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <CashFlowChart data={chartData} />
+        </div>
+
+        {/* Recent Transactions Section */}
+        <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-gray-900">
+              Recent Transactions
+            </h3>
+            <a
+              href="/transactions"
+              className="text-sm text-[#009360] hover:text-[#007a50] font-semibold transition-colors"
+            >
+              View All
+            </a>
+          </div>
+
+          <TransactionList />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;

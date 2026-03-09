@@ -1,10 +1,15 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
+import Login from "./pages/auth";
+import Dashboard from "./pages/dashboard/Dashboard.jsx";
+import MainLayout from "./layouts/MainLayout/MainLayout.jsx";
 
 function App() {
-  return <></>;
+  return (
+    <MainLayout>
+      <Dashboard />
+    </MainLayout>
+  );
 }
 
 export default App;
