@@ -1,9 +1,14 @@
 import Header from "../../components/Header.jsx";
 import CashFlowChart from "../../components/CashFlowChart.jsx";
 import StatCard from "../../components/Cards/StatCard.jsx";
+import BudgetProgressCard from "../../components/Cards/BudgetProgressCard.jsx";
+import ExpenseBreakdownCard from "../../components/Cards/ExpenseBreakdownCard.jsx";
+import OverviewMiniCard from "../../components/Cards/OverviewMiniCard.jsx";
 import TransactionList from "../../components/Transactions/TransactionList.jsx";
 import HeroCard from "../../components/Cards/HeroCard.jsx";
+import { formatCurrency, formatTransactionDate } from "../../utils/format.js";
 import { useState, useRef, useMemo, useEffect } from "react";
+import { Wallet, PieChart, ShoppingBag } from "lucide-react";
 
 const dummyData = {
   week: [
@@ -37,6 +42,10 @@ function Dashboard() {
   );
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const dateRef = useRef(null);
   const calendarRef = useRef(null);
@@ -102,8 +111,98 @@ function Dashboard() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch("http://localhost:5000/api/dashboard");
+        const result = await response.json();
+
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        if (result.success) {
+          setDashboardData({
+            summary: {
+              totalBalance: result.data.summary.totalBalance,
+              monthlyIncome: result.data.summary.monthlyIncome,
+              monthlyExpense: result.data.summary.monthlyExpense,
+              savings: result.data.summary.savings,
+              budgetUsedPercent: result.data.summary.budgetUsedPercent,
+              topCategoryTransactions:
+                result.data.summary.topCategoryTransactions,
+              topCategory: result.data.summary.topCategory,
+            },
+            cashFlow: dummyData,
+            budgetProgress: result.data.budgetProgress.map((item) => {
+              return {
+                id: item.id,
+                category: item.name,
+                spent: item.spent,
+                limit: item.limit_amount,
+                color: item.bg_color,
+              };
+            }),
+            expenseBreakdown: result.data.expenseBreakdown,
+            recentTransactions: result.data.recentTransactions,
+          });
+        }
+      } catch (err) {
+        console.error("Fetch dashboard error:", err);
+        setError("Failed to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="max-w-[150rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 w-52 bg-gray-200 rounded-lg"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-6 h-40 bg-gray-200 rounded-2xl"></div>
+              <div className="lg:col-span-3 h-40 bg-gray-200 rounded-2xl"></div>
+              <div className="lg:col-span-3 h-40 bg-gray-200 rounded-2xl"></div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 h-96 bg-gray-200 rounded-2xl"></div>
+              <div className="lg:col-span-1 h-96 bg-gray-200 rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm text-center">
+          <p className="text-lg font-semibold text-gray-900 mb-2">
+            Something went wrong
+          </p>
+          <p className="text-sm text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 max-w-[150rem] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 ">
+        <div className="mt-[2rem]">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1">
+            Track your balance, transactions, and spending performance.
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-[1rem]">
         {/* 1. Hero Card */}
         <HeroCard
@@ -116,7 +215,7 @@ function Dashboard() {
         {/* 2 & 3. Stats Cards */}
         <StatCard
           title="Monthly Income"
-          amount="$4,200.00"
+          amount={dashboardData.summary.monthlyIncome}
           trend="+12%"
           icon="fa-solid fa-arrow-down"
           trendColor="bg-[#009360]/10 text-[#009360]"
@@ -125,12 +224,37 @@ function Dashboard() {
         />
         <StatCard
           title="Monthly Expense"
-          amount="$1,850.00"
+          amount={dashboardData.summary.monthlyExpense}
           trend="-5%"
           icon="fa-solid fa-arrow-up"
           trendColor="bg-red-50 text-red-600"
           iconBg="bg-red-50"
           iconColor="text-red-500"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <OverviewMiniCard
+          title="Savings"
+          value={formatCurrency(dashboardData.summary.savings)}
+          subtitle="So với tháng trước"
+          icon={Wallet}
+          trend="up"
+          trendValue="12%"
+        />
+        <OverviewMiniCard
+          title="Budget Used"
+          value={`${dashboardData.summary.budgetUsedPercent}%`}
+          subtitle="Trên tất cả các ngân sách"
+          icon={PieChart}
+          trend="down"
+          trendValue="2.4%"
+        />
+        <OverviewMiniCard
+          title="Top Spending"
+          value={dashboardData.summary.topCategory} // Ví dụ: "Shopping"
+          subtitle={`${dashboardData.summary.topCategoryTransactions} giao dịch`}
+          icon={ShoppingBag}
         />
       </div>
 
@@ -237,18 +361,28 @@ function Dashboard() {
         {/* Recent Transactions Section */}
         <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-[1.8rem] font-semibold text-gray-900">
               Recent Transactions
             </h3>
             <a
               href="/transactions"
-              className="text-sm text-[#009360] hover:text-[#007a50] font-semibold transition-colors"
+              className="text-xl text-[#009360] hover:text-[#007a50] font-semibold transition-colors"
             >
               View All
             </a>
           </div>
 
-          <TransactionList />
+          <TransactionList transactions={dashboardData.recentTransactions} />
+        </div>
+      </div>
+      <div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <BudgetProgressCard
+            budgets={dashboardData.budgetProgress}
+            formatCurrency={formatCurrency}
+          />
+
+          <ExpenseBreakdownCard data={dashboardData.expenseBreakdown} />
         </div>
       </div>
     </div>

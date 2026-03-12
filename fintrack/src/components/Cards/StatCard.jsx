@@ -1,3 +1,4 @@
+import { formatCurrency } from "../../utils/format";
 const StatCard = ({
   title,
   amount,
@@ -25,7 +26,9 @@ const StatCard = ({
         <p className="text-gray-500 text-sm text-[1.4rem] font-medium">
           {title}
         </p>
-        <h3 className="text-2xl font-bold text-gray-900 mt-1">{amount}</h3>
+        <h3 className="text-2xl font-bold text-gray-900 mt-1">
+          {formatCurrency(amount)}
+        </h3>
       </div>
     </div>
   );
