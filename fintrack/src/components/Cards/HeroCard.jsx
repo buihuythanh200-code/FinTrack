@@ -1,4 +1,4 @@
-function HeroCard({ title, amount, trend, iconColor }) {
+function HeroCard({ title, amount, trend, iconColor, icon }) {
   return (
     <div className="lg:col-span-6 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-7 rounded-2xl shadow-xl relative overflow-hidden">
       <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 rounded-full bg-white opacity-5 blur-2xl"></div>
@@ -14,9 +14,7 @@ function HeroCard({ title, amount, trend, iconColor }) {
         </div>
         <div className="mt-6 flex items-center gap-2">
           <span className="bg-white/10 border border-white/20 text-white text-[1.4rem] font-medium px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-1.5">
-            <i
-              className={`fa-solid fa-arrow-trend-up ${iconColor} text-[10px]`}
-            ></i>
+            <i className={`${icon} ${iconColor} text-[10px]`}></i>
             {trend} vs last month
           </span>
         </div>

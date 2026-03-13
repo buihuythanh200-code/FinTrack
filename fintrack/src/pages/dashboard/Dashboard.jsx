@@ -146,6 +146,12 @@ function Dashboard() {
             }),
             expenseBreakdown: result.data.expenseBreakdown,
             recentTransactions: result.data.recentTransactions,
+
+            dataLastMonth: {
+              percentBalance: result.data.dataLastMonth.percentChangeBalance,
+              percentIncome: result.data.dataLastMonth.percentChangeIncome,
+              percentExpense: result.data.dataLastMonth.percentChangeExpense,
+            },
           });
         }
       } catch (err) {
@@ -158,6 +164,9 @@ function Dashboard() {
 
     fetchDashboardData();
   }, []);
+  const percentBalance = dashboardData?.dataLastMonth?.percentBalance ?? 0;
+  const percentIncome = dashboardData?.dataLastMonth?.percentIncome ?? 0;
+  const percentExpense = dashboardData?.dataLastMonth?.percentExpense ?? 0;
 
   if (loading) {
     return (
@@ -207,29 +216,54 @@ function Dashboard() {
         {/* 1. Hero Card */}
         <HeroCard
           title="Total Balance"
-          amount="$24,562.00"
-          trend="+2.5%"
-          iconColor="text-[#009360]"
+          amount={formatCurrency(dashboardData.summary.totalBalance)}
+          trend={
+            percentBalance > 0 ? `+${percentBalance}%` : `${percentBalance}%`
+          }
+          iconColor={percentBalance > 0 ? "text-[#009360]" : "text-red-500"}
+          icon={
+            percentBalance > 0
+              ? "fa-solid fa-arrow-trend-up"
+              : "fa-solid fa-arrow-trend-down"
+          }
         />
 
         {/* 2 & 3. Stats Cards */}
         <StatCard
           title="Monthly Income"
           amount={dashboardData.summary.monthlyIncome}
-          trend="+12%"
-          icon="fa-solid fa-arrow-down"
-          trendColor="bg-[#009360]/10 text-[#009360]"
-          iconBg="bg-[#009360]/10"
-          iconColor="text-[#009360]"
+          trend={percentIncome > 0 ? `+${percentIncome}%` : `${percentIncome}%`}
+          icon={
+            percentIncome > 0
+              ? `fa-solid fa-arrow-up`
+              : `fa-solid fa-arrow-down`
+          }
+          trendColor={
+            percentIncome > 0
+              ? `bg-[#009360]/10 text-[#009360]`
+              : `bg-red-50 text-red-600`
+          }
+          iconBg={percentIncome > 0 ? `bg-[#009360]/10` : `bg-red-50`}
+          iconColor={percentIncome > 0 ? `text-[#009360]` : `text-red-500`}
         />
         <StatCard
           title="Monthly Expense"
           amount={dashboardData.summary.monthlyExpense}
-          trend="-5%"
-          icon="fa-solid fa-arrow-up"
-          trendColor="bg-red-50 text-red-600"
-          iconBg="bg-red-50"
-          iconColor="text-red-500"
+          trend={
+            percentExpense > 0 ? `+${percentExpense}%` : `${percentExpense}%`
+          }
+          icon={
+            percentExpense > 0
+              ? `fa-solid fa-arrow-up`
+              : `fa-solid fa-arrow-down`
+          }
+          trendColor={
+            percentExpense <= 0
+              ? `bg-[#009360]/10 text-[#009360]`
+              : `bg-red-50 text-red-600`
+          }
+          iconBg={percentExpense <= 0 ? `bg-[#009360]/10` : `bg-red-50`}
+          iconColor={percentExpense <= 0 ? `text-[#009360]` : `text-red-500`}
         />
       </div>
 

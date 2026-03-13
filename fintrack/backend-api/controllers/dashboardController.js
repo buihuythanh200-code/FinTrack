@@ -21,10 +21,35 @@ const getDashboardData = async (req, res) => {
       [userId],
     );
 
-    const totalIncome = Number(summaryRows[0].totalIncome || 0);
-    const totalExpense = Number(summaryRows[0].totalExpense || 0);
+    const totalIncome = Number(summaryRows[0].total_income ?? 0);
+    const totalExpense = Number(summaryRows[0].total_expense ?? 0);
     const totalBalance = totalIncome - totalExpense;
 
+    // 2. Total balance tháng trước
+    const [lastMonthBalanceRows] = await db.query(
+      `
+        SELECT  
+          COALESCE(SUM(CASE
+                          WHEN c.type = 'income' THEN t.amount
+                          ELSE -t.amount
+                        END),0) AS amount
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        WHERE t.user_id = ?
+        AND transaction_date < DATE_FORMAT(CURDATE(), '%Y-%m-01')
+      `,
+      [userId],
+    );
+    const lastMonthBalance = Number(lastMonthBalanceRows[0]?.amount ?? 0);
+    const percentChangeBalance =
+      lastMonthBalance !== 0
+        ? +(
+            ((totalBalance - lastMonthBalance) / lastMonthBalance) *
+            100
+          ).toFixed(2)
+        : 0;
+
+    // 3. Tổng income, expense tháng này
     const [monthlySummaryRows] = await db.query(
       `
                 SELECT
@@ -47,6 +72,43 @@ const getDashboardData = async (req, res) => {
     ); // Tổng số giao dịch
     const savings = monthlyIncome - monthlyExpense; // Tiết kiệm
 
+    // 4. Tổng Income, Expense, % change của tháng trước
+    const [lastMonthSummaryRows] = await db.query(
+      `
+        SELECT
+            COALESCE(SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END), 0) AS last_month_income,
+            COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS last_month_expense,
+            COUNT(t.id) AS transactions_count
+        FROM transactions t
+        JOIN categories c ON t.category_id = c.id
+        WHERE t.user_id = ?
+          AND MONTH(t.transaction_date) = MONTH(CURDATE() - INTERVAL 1 MONTH)
+          AND YEAR(t.transaction_date) = YEAR(CURDATE() - INTERVAL 1 MONTH)
+      `,
+      [userId],
+    );
+
+    const lastMonthIncome = Number(
+      lastMonthSummaryRows[0]?.last_month_income ?? 0,
+    );
+    const lastMonthExpense = Number(
+      lastMonthSummaryRows[0]?.last_month_expense ?? 0,
+    );
+
+    const percentChangeIncome =
+      lastMonthIncome !== 0
+        ? +(
+            ((monthlyIncome - lastMonthIncome) / lastMonthIncome) *
+            100
+          ).toFixed(2)
+        : 0;
+    const percentChangeExpense =
+      lastMonthExpense !== 0
+        ? +(
+            ((monthlyExpense - lastMonthExpense) / lastMonthExpense) *
+            100
+          ).toFixed(2)
+        : 0;
     //Danh mục chi tiêu nhiều nhất tháng
     const [topCategoryRows] = await db.query(
       `
@@ -197,9 +259,16 @@ const getDashboardData = async (req, res) => {
           topCategoryTransactions,
           topCategory,
         },
+
         budgetProgress,
         expenseBreakdown,
         recentTransactions,
+
+        dataLastMonth: {
+          percentChangeBalance,
+          percentChangeIncome,
+          percentChangeExpense,
+        },
       },
     });
   } catch (error) {
