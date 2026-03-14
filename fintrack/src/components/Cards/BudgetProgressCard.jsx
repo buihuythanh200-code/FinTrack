@@ -1,3 +1,10 @@
+const colorMap = {
+  "bg-orange-50": "bg-orange-500",
+  "bg-blue-50": "bg-blue-500",
+  "bg-yellow-50": "bg-yellow-500",
+  "bg-pink-50": "bg-red-500",
+  "bg-purple-50": "bg-purple-500",
+};
 function BudgetProgressCard({ budgets, formatCurrency }) {
   return (
     <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-lg">
@@ -15,8 +22,11 @@ function BudgetProgressCard({ budgets, formatCurrency }) {
 
       <div className="space-y-7">
         {budgets.map((item) => {
-          const percent = Math.min((item.spent / item.limit) * 100, 100);
-          const isOver = item.spent > item.limit;
+          const spent = Number(item.spent);
+          const limit = Number(item.limit);
+
+          const percent = Math.min((spent / limit) * 100, 100);
+          const isOver = spent > limit;
 
           return (
             <div key={item.id}>
@@ -45,7 +55,7 @@ function BudgetProgressCard({ budgets, formatCurrency }) {
               {/* Tăng độ dày thanh tiến trình */}
               <div className="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ease-out ${isOver ? "bg-red-500" : item.color}`}
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${isOver ? "bg-red-500" : colorMap[item.color]}`}
                   style={{ width: `${percent}%` }}
                 />
               </div>

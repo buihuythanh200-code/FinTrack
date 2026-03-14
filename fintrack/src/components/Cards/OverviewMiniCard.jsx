@@ -8,6 +8,8 @@ function OverviewMiniCard({
   icon: Icon,
   trend,
   trendValue,
+  iconBg = "bg-gray-100",
+  iconColor = "text-gray-700",
 }) {
   return (
     <div className="group relative bg-white p-7 rounded-3xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
@@ -24,7 +26,10 @@ function OverviewMiniCard({
 
         {/* Phần Icon được làm to ra một chút */}
         {Icon && (
-          <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-md transition-all duration-300 shrink-0">
+          <div
+            className={`p-3.5 ${iconBg} ${iconColor} rounded-xl border border-gray-200 group-hover:bg-indigo-500
+    group-hover:text-white shadow-sm  transition-all duration-300 group-hover:shadow-md`}
+          >
             <Icon className="w-7 h-7" />
           </div>
         )}

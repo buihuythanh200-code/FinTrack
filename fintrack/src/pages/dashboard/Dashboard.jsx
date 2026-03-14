@@ -151,6 +151,8 @@ function Dashboard() {
               percentBalance: result.data.dataLastMonth.percentChangeBalance,
               percentIncome: result.data.dataLastMonth.percentChangeIncome,
               percentExpense: result.data.dataLastMonth.percentChangeExpense,
+              percentSavings: result.data.dataLastMonth.percentChangeSavings,
+              percentBudget: result.data.dataLastMonth.budgetUsedGrowthPercent,
             },
           });
         }
@@ -167,6 +169,8 @@ function Dashboard() {
   const percentBalance = dashboardData?.dataLastMonth?.percentBalance ?? 0;
   const percentIncome = dashboardData?.dataLastMonth?.percentIncome ?? 0;
   const percentExpense = dashboardData?.dataLastMonth?.percentExpense ?? 0;
+  const percentSavings = dashboardData?.dataLastMonth?.percentSavings ?? 0;
+  const percentBudget = dashboardData?.dataLastMonth?.percentBudget ?? 0;
 
   if (loading) {
     return (
@@ -273,22 +277,28 @@ function Dashboard() {
           value={formatCurrency(dashboardData.summary.savings)}
           subtitle="So với tháng trước"
           icon={Wallet}
-          trend="up"
-          trendValue="12%"
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+          trend={percentSavings >= 0 ? "up" : "down"}
+          trendValue={`${percentSavings}%`}
         />
         <OverviewMiniCard
           title="Budget Used"
           value={`${dashboardData.summary.budgetUsedPercent}%`}
           subtitle="Trên tất cả các ngân sách"
           icon={PieChart}
-          trend="down"
-          trendValue="2.4%"
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
+          trend={percentBudget < 0 ? "down" : "up"}
+          trendValue={`${Math.abs(percentBudget)}%`}
         />
         <OverviewMiniCard
           title="Top Spending"
-          value={dashboardData.summary.topCategory} // Ví dụ: "Shopping"
+          value={dashboardData.summary.topCategory}
           subtitle={`${dashboardData.summary.topCategoryTransactions} giao dịch`}
           icon={ShoppingBag}
+          iconBg="bg-purple-50"
+          iconColor="text-purple-600"
         />
       </div>
 
