@@ -182,6 +182,78 @@ const getRecentRows = async (userId) => {
   return recentRows;
 };
 
+//9. Cash Flow Week
+const getCashFlowByWeeksRows = async (userId, startDate, endDate) => {
+  const [rows] = await db.query(
+    `
+      SELECT 
+        DATE(t.transaction_date) AS date,
+        COALESCE(SUM(CASE WHEN c.type = "income" THEN t.amount ELSE 0 END), 0) AS income,
+        COALESCE(SUM(CASE WHEN c.type = "expense" THEN t.amount ELSE 0 END), 0) AS expense
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.user_id=? AND DATE(t.transaction_date) BETWEEN ? AND ?
+      GROUP BY DATE(t.transaction_date)
+      ORDER BY DATE(t.transaction_date)
+    `,
+    [userId, startDate, endDate],
+  );
+  return rows;
+};
+
+//10. Cash Flow Month
+const getCashFlowByMonthRows = async (userId, month, year) => {
+  const [rows] = await db.query(
+    `
+      SELECT 
+        CASE 
+          WHEN DAY(t.transaction_date) BETWEEN 1 AND 7 THEN 'week 1'
+          WHEN DAY(t.transaction_date) BETWEEN 8 AND 14 THEN 'week 2'
+          WHEN DAY(t.transaction_date) BETWEEN 15 AND 21 THEN 'week 3'
+          ELSE 'Week 5'
+        END AS week_name,
+        CASE
+          WHEN DAY(t.transaction_date) BETWEEN 1 AND 7 THEN 1
+          WHEN DAY(t.transaction_date) BETWEEN 8 AND 14 THEN 
+          WHEN DAY(t.transaction_date) BETWEEN 15 AND 21 THEN 3
+          ELSE 4
+        END AS week_order
+        COALESCE(SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END), 0) AS income,
+        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense,
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.user_id = ?
+        AND MONTH(t.transaction_date)=?
+        AND YEAR(t.transaction_date)=?
+      GROUP BY week_name, week_order
+      ORDER BY week_order  
+    `,
+    [userId, month, year],
+  );
+
+  return rows;
+};
+
+const getCashFlowByYearRows = async (userId, month, year) => {
+  const [rows] = await db.query(
+    `
+      SELECT
+        MONTH(t.transaction_date) AS month_number,
+        COALESCE(SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END), 0) AS income,
+        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense,
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.user_id = ?
+          AND YEAR(t.transaction_date) = ?
+      GROUP BY MONTH(t.transaction_date)
+      ORDER BY month_number
+    `,
+    [userId, year],
+  );
+
+  return rows;
+};
+
 module.exports = {
   getSummaryRows,
   getLastMonthBalanceRows,
@@ -191,4 +263,7 @@ module.exports = {
   getBudgetProgress,
   getExpenseRows,
   getRecentRows,
+  getCashFlowByWeeksRows,
+  getCashFlowByMonthRows,
+  getCashFlowByYearRows,
 };

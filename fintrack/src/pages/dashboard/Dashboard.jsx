@@ -49,6 +49,7 @@ function Dashboard() {
 
   const dateRef = useRef(null);
   const calendarRef = useRef(null);
+
   const chartData = dummyData[timeFilter];
 
   // --- Logic Helpers (Giữ nguyên của bạn) ---
@@ -65,6 +66,14 @@ function Dashboard() {
     end.setDate(start.getDate() + 6);
     return end;
   };
+
+  const formatDateForApi = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const formatDate = (date) =>
     date.toLocaleDateString("en-US", {
       month: "short",
@@ -117,8 +126,32 @@ function Dashboard() {
         setLoading(true);
         setError("");
 
-        const response = await fetch("http://localhost:5000/api/dashboard");
+        let queryString = "";
+
+        if (timeFilter === "week") {
+          const startDate = formatDateForApi(getStartOfWeek(selectedDate));
+          const endDate = formatDateForApi(getEndOfWeek(selectedDate));
+
+          queryString = `filter=week&startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        if (timeFilter === "month") {
+          const [year, month] = selectedMonth.split("-");
+          queryString = `filter=month&month=${month}&year=${year}`;
+        }
+
+        if (timeFilter === "year") {
+          queryString = `filter=year&year=${selectedYear}`;
+        }
+
+        const response = await fetch(
+          `http://localhost:5000/api/dashboard?${queryString}`,
+        );
         const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to load dashboard data.");
+        }
 
         await new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -139,8 +172,8 @@ function Dashboard() {
               return {
                 id: item.id,
                 category: item.name,
-                spent: item.spent,
-                limit: item.limit_amount,
+                spent: Number(item.spent),
+                limit: Number(item.limit_amount),
                 color: item.bg_color,
               };
             }),
@@ -165,7 +198,7 @@ function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [timeFilter, selectedDate, selectedMonth, selectedYear]);
   const percentBalance = dashboardData?.dataLastMonth?.percentBalance ?? 0;
   const percentIncome = dashboardData?.dataLastMonth?.percentIncome ?? 0;
   const percentExpense = dashboardData?.dataLastMonth?.percentExpense ?? 0;
