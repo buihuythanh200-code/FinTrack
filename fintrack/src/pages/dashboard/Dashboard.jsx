@@ -6,40 +6,24 @@ import ExpenseBreakdownCard from "../../components/Cards/ExpenseBreakdownCard.js
 import OverviewMiniCard from "../../components/Cards/OverviewMiniCard.jsx";
 import TransactionList from "../../components/Transactions/TransactionList.jsx";
 import HeroCard from "../../components/Cards/HeroCard.jsx";
-import { formatCurrency, formatTransactionDate } from "../../utils/format.js";
+import {
+  formatCurrency,
+  parseLocalDate,
+  formatDateInput,
+  formatMonthInput,
+  formatTransactionDate,
+  parseDateInput,
+} from "../../utils/format.js";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { Wallet, PieChart, ShoppingBag } from "lucide-react";
-
-const dummyData = {
-  week: [
-    { name: "Mon", income: 4000, expense: 2400 },
-    { name: "Tue", income: 3000, expense: 1398 },
-    { name: "Wed", income: 2000, expense: 9800 },
-    { name: "Thu", income: 2780, expense: 3908 },
-    { name: "Fri", income: 1890, expense: 4800 },
-    { name: "Sat", income: 2390, expense: 3800 },
-    { name: "Sun", income: 3490, expense: 4300 },
-  ],
-  month: [
-    { name: "Week 1", income: 15000, expense: 12000 },
-    { name: "Week 2", income: 18000, expense: 10000 },
-    { name: "Week 3", income: 12000, expense: 14000 },
-    { name: "Week 4", income: 22000, expense: 16000 },
-  ],
-  year: [
-    { name: "Jan", income: 65000, expense: 50000 },
-    { name: "Feb", income: 70000, expense: 55000 },
-    { name: "Mar", income: 60000, expense: 62000 },
-    { name: "Apr", income: 85000, expense: 48000 },
-  ],
-};
 
 function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7),
-  );
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -50,7 +34,7 @@ function Dashboard() {
   const dateRef = useRef(null);
   const calendarRef = useRef(null);
 
-  const chartData = dummyData[timeFilter];
+  const chartData = dashboardData?.cashFlow || [];
 
   // --- Logic Helpers (Giữ nguyên của bạn) ---
   const getStartOfWeek = (date) => {
@@ -167,7 +151,7 @@ function Dashboard() {
                 result.data.summary.topCategoryTransactions,
               topCategory: result.data.summary.topCategory,
             },
-            cashFlow: dummyData,
+            cashFlow: result.data.cashFlow,
             budgetProgress: result.data.budgetProgress.map((item) => {
               return {
                 id: item.id,
@@ -377,9 +361,9 @@ function Dashboard() {
                         ref={dateRef}
                         type="date"
                         className="absolute opacity-0 pointer-events-none bottom-[0]"
-                        value={selectedDate.toISOString().split("T")[0]}
+                        value={formatDateInput(selectedDate)}
                         onChange={(e) =>
-                          setSelectedDate(new Date(e.target.value))
+                          setSelectedDate(parseDateInput(e.target.value))
                         }
                       />
                       <input

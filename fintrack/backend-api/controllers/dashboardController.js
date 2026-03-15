@@ -13,6 +13,12 @@ const {
 } = require("../repositories/dashboardRepository");
 
 const {
+  buildWeeklyCashFlow,
+  buildMonthlyCashFlow,
+  buildYearlyCashFlow,
+} = require("../utils/cashFlowUtils");
+
+const {
   toNumber,
   calcPercentChange,
   calcBudgetGrowthPercent,
@@ -24,8 +30,37 @@ const getDashboardData = async (req, res) => {
   try {
     const userId = 1;
 
+    const { filter, startDate, endDate, month, year } = req.query;
+
     const { currentMonth, currentYear, previousMonth, previousYear } =
       getCurrentAndPreviousMonthInfo();
+
+    // 11. Filter CashFlow by Week
+
+    // 12. Filter CashFlow by Month
+
+    // 13. Filter CashFlow by Year
+
+    let cashFlow = [];
+
+    if (filter === "week") {
+      const cashFlowRows = await getCashFlowByWeeksRows(
+        userId,
+        startDate,
+        endDate,
+      );
+      cashFlow = buildWeeklyCashFlow(cashFlowRows, startDate);
+    }
+
+    if (filter === "month") {
+      const cashFlowRows = await getCashFlowByMonthRows(userId, month, year);
+      cashFlow = buildMonthlyCashFlow(cashFlowRows);
+    }
+
+    if (filter === "year") {
+      const cashFlowRows = await getCashFlowByYearRows(userId, year);
+      cashFlow = buildYearlyCashFlow(cashFlowRows);
+    }
 
     // 1. Summary
     const summaryRows = await getSummaryRows(userId);
@@ -163,8 +198,6 @@ const getDashboardData = async (req, res) => {
       };
     });
 
-    // 11.
-
     res.json({
       success: true,
       data: {
@@ -177,7 +210,7 @@ const getDashboardData = async (req, res) => {
           topCategoryTransactions,
           topCategory,
         },
-
+        cashFlow,
         budgetProgress,
         expenseBreakdown,
         recentTransactions,

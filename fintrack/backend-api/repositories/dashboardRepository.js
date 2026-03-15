@@ -187,14 +187,14 @@ const getCashFlowByWeeksRows = async (userId, startDate, endDate) => {
   const [rows] = await db.query(
     `
       SELECT 
-        DATE(t.transaction_date) AS date,
+        DATE_FORMAT(t.transaction_date, '%Y-%m-%d') AS date,
         COALESCE(SUM(CASE WHEN c.type = "income" THEN t.amount ELSE 0 END), 0) AS income,
         COALESCE(SUM(CASE WHEN c.type = "expense" THEN t.amount ELSE 0 END), 0) AS expense
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       WHERE t.user_id=? AND DATE(t.transaction_date) BETWEEN ? AND ?
-      GROUP BY DATE(t.transaction_date)
-      ORDER BY DATE(t.transaction_date)
+      GROUP BY DATE_FORMAT(t.transaction_date, '%Y-%m-%d')
+      ORDER BY DATE_FORMAT(t.transaction_date, '%Y-%m-%d')
     `,
     [userId, startDate, endDate],
   );
@@ -210,16 +210,16 @@ const getCashFlowByMonthRows = async (userId, month, year) => {
           WHEN DAY(t.transaction_date) BETWEEN 1 AND 7 THEN 'week 1'
           WHEN DAY(t.transaction_date) BETWEEN 8 AND 14 THEN 'week 2'
           WHEN DAY(t.transaction_date) BETWEEN 15 AND 21 THEN 'week 3'
-          ELSE 'Week 5'
+          ELSE 'week 4'
         END AS week_name,
         CASE
           WHEN DAY(t.transaction_date) BETWEEN 1 AND 7 THEN 1
-          WHEN DAY(t.transaction_date) BETWEEN 8 AND 14 THEN 
+          WHEN DAY(t.transaction_date) BETWEEN 8 AND 14 THEN 2
           WHEN DAY(t.transaction_date) BETWEEN 15 AND 21 THEN 3
           ELSE 4
-        END AS week_order
+        END AS week_order,
         COALESCE(SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END), 0) AS income,
-        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense,
+        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       WHERE t.user_id = ?
@@ -234,13 +234,13 @@ const getCashFlowByMonthRows = async (userId, month, year) => {
   return rows;
 };
 
-const getCashFlowByYearRows = async (userId, month, year) => {
+const getCashFlowByYearRows = async (userId, year) => {
   const [rows] = await db.query(
     `
       SELECT
         MONTH(t.transaction_date) AS month_number,
         COALESCE(SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END), 0) AS income,
-        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense,
+        COALESCE(SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       WHERE t.user_id = ?
