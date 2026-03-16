@@ -16,6 +16,20 @@ const getSummaryRows = async (userId) => {
   return summaryRows;
 };
 
+// add get total initial balance
+
+const getTotalInitialBalanceRows = async (userId) => {
+  const [totalInitialBalanceRows] = await db.query(
+    `
+      SELECT COALESCE(SUM(w.initial_balance),0) AS total_initial
+      FROM wallets w
+      WHERE w.user_id = ?
+    `,
+    [userId],
+  );
+  return totalInitialBalanceRows;
+};
+
 // 2. Total balance tháng trước
 const getLastMonthBalanceRows = async (userId) => {
   const [lastMonthBalanceRows] = await db.query(
@@ -256,6 +270,7 @@ const getCashFlowByYearRows = async (userId, year) => {
 
 module.exports = {
   getSummaryRows,
+  getTotalInitialBalanceRows,
   getLastMonthBalanceRows,
   getMonthlySummaryRows,
   getTopCategoryRows,

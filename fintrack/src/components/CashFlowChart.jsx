@@ -7,6 +7,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+const formatYAxis = (value) => {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}tr`;
+  if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+  return value;
+};
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat("vi-VN").format(value) + " đ";
+};
 
 function CashFlowChart({ data }) {
   return (
@@ -44,8 +53,12 @@ function CashFlowChart({ data }) {
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#9ca3af", fontSize: 12 }}
+            tickFormatter={formatYAxis}
           />
           <Tooltip
+            formatter={(value) => {
+              return formatCurrency(value);
+            }}
             contentStyle={{
               borderRadius: "8px",
               border: "none",

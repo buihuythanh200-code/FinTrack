@@ -1,5 +1,6 @@
 const {
   getSummaryRows,
+  getTotalInitialBalanceRows,
   getLastMonthBalanceRows,
   getMonthlySummaryRows,
   getTopCategoryRows,
@@ -64,15 +65,19 @@ const getDashboardData = async (req, res) => {
 
     // 1. Summary
     const summaryRows = await getSummaryRows(userId);
+    const totalInitialRows = await getTotalInitialBalanceRows(userId);
 
     const totalIncome = toNumber(summaryRows[0]?.total_income);
     const totalExpense = toNumber(summaryRows[0]?.total_expense);
-    const totalBalance = totalIncome - totalExpense;
+    const totalInitial = toNumber(totalInitialRows[0]?.total_initial);
+
+    const totalBalance = totalInitial + totalIncome - totalExpense;
 
     // 2. Total balance tháng trước
 
     const lastMonthBalanceRows = await getLastMonthBalanceRows(userId);
-    const lastMonthBalance = toNumber(lastMonthBalanceRows[0]?.amount);
+    const lastMonthBalance =
+      totalInitial + toNumber(lastMonthBalanceRows[0]?.amount);
     const percentChangeBalance = calcPercentChange(
       totalBalance,
       lastMonthBalance,
