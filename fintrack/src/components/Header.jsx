@@ -1,8 +1,11 @@
 import logo from "../assets/logo-removebg-preview.png";
 import LayoutAddTransaction from "./AddTransaction/LayoutAddTransaction";
 import { useState } from "react";
+import { useLocation, Link } from "react-router-dom";
 function Header() {
-  const currentPath = "/dashboard";
+  // hook này sẽ trả về object location, trong đó .pathname là đường dẫn hiện tại (vd: /transactions)
+  const location = useLocation();
+  const currentPath = location.pathname;
   // handle nền form new transaction
   const [isModalOpen, setIsModalOpen] = useState(false);
   return (
@@ -46,7 +49,7 @@ function Header() {
             <a
               href="/transactions"
               className={`px-5 py-3 rounded-lg text-[1.6rem] font-semibold transition-colors ${
-                currentPath === "/transactions"
+                currentPath === "/calendar"
                   ? "bg-gray-100 text-gray-900"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}

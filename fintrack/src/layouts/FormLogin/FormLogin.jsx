@@ -25,7 +25,8 @@ function FormLogin() {
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
         // 2. Chuyển hướng sang trang Dashboard
-        window.location.href = "/dashboard";
+        // 3. Chuyển hướng bằng navigate (không load lại trang)
+        navigate("/transactions");
       }
     } catch (err) {
       // Bắt lỗi từ Backend trả về (Ví dụ: Sai mật khẩu)

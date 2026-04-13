@@ -125,8 +125,8 @@ function FormAddTransaction({ onClose }) {
     const transactionData = {
       type: active,
       amount: Number(amount),
-      walletName: wallet,
       categoryId: selectedCategory.id,
+      walletId: selectedWallet.id,
       dateTime: dateTime,
       isTemplate: isTemplate,
       note: note,
@@ -167,7 +167,7 @@ function FormAddTransaction({ onClose }) {
     `relative z-10 flex-1 cursor-pointer rounded-xl px-4 py-2 text-center font-medium transition`;
 
   return (
-    <div className="xl:w-[60%] bg-white rounded-2xl shadow-lg border border-gray-100">
+    <div className="xl:w-[60%] h-[90vh] overflow-hidden bg-white rounded-2xl shadow-lg border border-gray-100 overflow-y-auto">
       <header className="flex items-center justify-between px-8 py-6 border-b border-gray-100">
         <h2 className="text-[1.6rem] font-semibold text-gray-800">
           Add Transaction
@@ -182,7 +182,7 @@ function FormAddTransaction({ onClose }) {
       </header>
 
       <form>
-        <div className="flex">
+        <div className="flex flex-col md:flex-row">
           {/* Left Column */}
           <div className="flex-1 bg-gray-100 p-[1.5rem]">
             {/* Select Template Header */}
