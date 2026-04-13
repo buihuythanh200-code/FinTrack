@@ -11,6 +11,8 @@ const {
   getCashFlowByWeeksRows,
   getCashFlowByMonthRows,
   getCashFlowByYearRows,
+  getParentCategories,
+  getSubCategories,
 } = require("../repositories/dashboardRepository");
 
 const {
@@ -29,7 +31,10 @@ const { getCurrentAndPreviousMonthInfo } = require("../utils/dashboardDate");
 
 const getDashboardData = async (req, res) => {
   try {
-    const userId = 1;
+    // THAY ĐỔI Ở ĐÂY: Lấy ID từ token đã giải mã
+    const userId = req.user.id;
+
+    console.log(">>> Đang lấy dữ liệu cho User ID:", userId);
 
     const { filter, startDate, endDate, month, year } = req.query;
 

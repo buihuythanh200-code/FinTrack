@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { getDashboardData } = require("../controllers/dashboardController");
+const dashboardController = require("../controllers/dashboardController");
+const verifyToken = require("../middlewares/authMiddleware");
 
-router.get("/", getDashboardData);
+// Thêm verifyToken vào trước controller
+router.get("/", verifyToken, dashboardController.getDashboardData);
 
 module.exports = router;

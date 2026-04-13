@@ -6,7 +6,6 @@ import ExpenseBreakdownCard from "../../components/Cards/ExpenseBreakdownCard.js
 import OverviewMiniCard from "../../components/Cards/OverviewMiniCard.jsx";
 import TransactionList from "../../components/Transactions/TransactionList.jsx";
 import HeroCard from "../../components/Cards/HeroCard.jsx";
-import LayoutAddTransaction from "../../components/AddTransaction/LayoutAddTransaction.jsx";
 import {
   formatCurrency,
   parseLocalDate,
@@ -111,6 +110,13 @@ function Dashboard() {
         setLoading(true);
         setError("");
 
+        // 1. Lấy token từ localStorage
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Vui lòng đăng nhập để xem dữ liệu.");
+          return;
+        }
+
         let queryString = "";
 
         if (timeFilter === "week") {
@@ -131,10 +137,23 @@ function Dashboard() {
 
         const response = await fetch(
           `http://localhost:5000/api/dashboard?${queryString}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // <--- QUAN TRỌNG NHẤT
+            },
+          },
         );
         const result = await response.json();
 
         if (!response.ok) {
+          // Nếu token hết hạn hoặc lỗi 401, chuyển về trang login
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            return;
+          }
           throw new Error(result.message || "Failed to load dashboard data.");
         }
 
@@ -232,7 +251,6 @@ function Dashboard() {
 
   return (
     <div>
-      <LayoutAddTransaction />
       <Header />
       <div className="min-h-screen bg-slate-50 max-w-[150rem] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 ">

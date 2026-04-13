@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const categoriesRoutes = require("./routes/categoriesRoutes");
+const walletsRoutes = require("./routes/walletsRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 dotenv.config();
 
@@ -21,6 +24,14 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/dashboard/categories", categoriesRoutes);
+app.use("/api/dashboard/wallets", walletsRoutes);
+
+app.use((req, res, next) => {
+  console.log(`>>> Request tới: ${req.method} ${req.url}`);
+  next();
+});
+app.use("/api/auth", authRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -1,8 +1,47 @@
+import { useState } from "react";
+import axios from "axios";
 function FormLogin() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        {
+          email,
+          password,
+        },
+      );
+
+      if (response.data.success) {
+        // THÊM DÒNG NÀY ĐỂ XEM API THỰC SỰ TRẢ VỀ GÌ
+        console.log("Dữ liệu API trả về:", response.data);
+        // 1. Lưu Token và thông tin User vào Local Storage của trình duyệt
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        // 2. Chuyển hướng sang trang Dashboard
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      // Bắt lỗi từ Backend trả về (Ví dụ: Sai mật khẩu)
+      setError(
+        err.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại!",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <form
       action=""
       className="form-login p-[7rem] flex flex-col gap-[1rem] max-sm:p-[2rem] max-sm:flex-1"
+      onSubmit={handleLogin}
     >
       <h2 className="form-login-title text-[4rem] font-semibold text-center max-sm:text-[3rem]">
         Login
@@ -21,6 +60,8 @@ function FormLogin() {
           placeholder="Type your email"
           id="email"
           required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
       </div>
 
@@ -40,6 +81,8 @@ function FormLogin() {
           placeholder="Type your password"
           id="password"
           required
+          value={password} // THÊM DÒNG NÀY
+          onChange={(e) => setPassword(e.target.value)}
         />
       </div>
 
@@ -49,10 +92,22 @@ function FormLogin() {
 
       <button
         type="submit"
-        className="btn-login bg-[oklch(45%_0.085_224.283)] text-white hover:bg-[oklch(40%_0.085_224.283)] h-[4rem] rounded-xl cursor-pointer transition-all font-semibold"
+        disabled={isLoading}
+        className={`btn-login text-white h-[4rem] rounded-xl cursor-pointer transition-all font-semibold ${
+          isLoading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-[oklch(45%_0.085_224.283)] hover:bg-[oklch(40%_0.085_224.283)]"
+        }`}
       >
-        Login
+        {isLoading ? "Đang xử lý..." : "Login"}
       </button>
+
+      {/* THÊM PHẦN NÀY ĐỂ HIỂN THỊ LỖI */}
+      {error && (
+        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-[1.4rem] text-center border border-red-100">
+          {error}
+        </div>
+      )}
 
       <div className="social-sign-up flex flex-col gap-[1rem] items-center mt-[3rem]">
         <p className="sub-title text-[1.6rem] text-center max-sm:whitespace-nowrap">

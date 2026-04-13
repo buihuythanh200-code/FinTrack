@@ -264,8 +264,33 @@ const getCashFlowByYearRows = async (userId, year) => {
     `,
     [userId, year],
   );
-
   return rows;
+};
+
+const getParentCategories = async () => {
+  // Lấy tất cả danh mục cha
+  const [rows] = await db.query("SELECT * FROM parent_categories");
+  return rows;
+};
+
+const getSubCategories = async () => {
+  // Lấy tất cả danh mục con
+  const [rows] = await db.query("SELECT * FROM categories");
+  return rows;
+};
+
+const getWallets = async () => {
+  try {
+    // Thêm ORDER BY để danh sách ví luôn hiển thị ổn định trên UI
+    const [rows] = await db.query(
+      "SELECT id, name, type, icon FROM wallets ORDER BY id DESC",
+    );
+    return rows;
+  } catch (error) {
+    // Log lỗi chi tiết tại tầng Repo để dễ debug
+    console.error("Database Error in getWallets:", error.message);
+    throw error; // Quăng lỗi để Controller bắt được
+  }
 };
 
 module.exports = {
@@ -281,4 +306,8 @@ module.exports = {
   getCashFlowByWeeksRows,
   getCashFlowByMonthRows,
   getCashFlowByYearRows,
+  // lấy categories
+  getParentCategories,
+  getSubCategories,
+  getWallets,
 };
