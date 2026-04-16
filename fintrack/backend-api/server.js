@@ -6,6 +6,7 @@ const categoriesRoutes = require("./routes/categoriesRoutes");
 const walletsRoutes = require("./routes/walletsRoutes");
 const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const goalRoutes = require("./routes/goalRoutes");
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/dashboard/categories", categoriesRoutes);
 app.use("/api/dashboard/wallets", walletsRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/goal", goalRoutes);
 
 app.use((req, res, next) => {
   console.log(`>>> Request tới: ${req.method} ${req.url}`);

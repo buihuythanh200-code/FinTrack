@@ -40,6 +40,11 @@ function Transactions() {
       try {
         // Lấy token từ kho lưu trữ
         const token = localStorage.getItem("token");
+        // Kiểm tra nếu không có token thì báo lỗi luôn, khỏi gọi API tốn công
+        if (!token) {
+          console.error("Không tìm thấy Token! Vui lòng đăng nhập lại.");
+          return;
+        }
         const response = await axios.get(
           "http://localhost:5000/api/transactions",
           {

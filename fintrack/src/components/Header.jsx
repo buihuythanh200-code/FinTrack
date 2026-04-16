@@ -47,14 +47,14 @@ function Header() {
               Transactions
             </a>
             <a
-              href="/transactions"
+              href="/goal"
               className={`px-5 py-3 rounded-lg text-[1.6rem] font-semibold transition-colors ${
-                currentPath === "/calendar"
+                currentPath === "/goal"
                   ? "bg-gray-100 text-gray-900"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              Calendar
+              Goal
             </a>
             <a
               href="/budgets"
